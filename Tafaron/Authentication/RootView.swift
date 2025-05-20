@@ -15,7 +15,7 @@ struct RootView: View {
     var body: some View {
         ZStack {
             NavigationStack {
-                Text ("Réglages")
+                SettingsView(showSignInView: $showSignInView)
             }
         }
         .onAppear{ //Quand la vue apparait a l'écran, on verifie si l'utilisateur est connecté
@@ -24,7 +24,7 @@ struct RootView: View {
         }
         .fullScreenCover(isPresented: $showSignInView){ //Si imshow a True On montre AuthenticationView
             NavigationStack {
-                AuthenticationView()
+                AuthenticationView(showSignInView: $showSignInView)
             }
         }
     }

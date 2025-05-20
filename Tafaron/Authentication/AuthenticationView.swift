@@ -6,13 +6,51 @@
 //
 
 import SwiftUI
+import GoogleSignIn
+import GoogleSignInSwift
+
+
+@MainActor
+final class AuthenticationViewModel : ObservableObject {
+    
+    func signInGoogle() async throws {
+        guard let topVC = Utilities.shared.topViewController() else {
+            throw URLError(.cannotFindHost)
+        }
+    }
+    
+}
 
 struct AuthenticationView: View {
+    
+    @StateObject private var viewModel = AuthenticationViewModel()
+    @Binding var showSignInView: Bool
+    
     var body: some View {
-        Text(/*@START_MENU_TOKEN@*/"Hello, World!"/*@END_MENU_TOKEN@*/)
+        VStack{
+            NavigationLink{
+                SignInEmailView(showSignInView: $showSignInView)
+            } label:{
+                Text("Connexion avec Email")
+                    .font(.headline)
+                    .foregroundColor(.white)
+                    .frame(height: 55)
+                    .frame(maxWidth: .infinity)
+                    .background(Color.blue)
+                    .cornerRadius(10)
+            }
+            GoogleSignInButton(viewModel: GoogleSignInButtonViewModel(scheme: .dark, style: .wide, state: .normal)){
+                
+            }
+            Spacer()
+        }
+        .padding()
+        .navigationTitle("Connexion")
     }
 }
 
 #Preview {
-    AuthenticationView()
+    NavigationStack{
+        AuthenticationView(showSignInView: .constant(false))
+    }
 }
