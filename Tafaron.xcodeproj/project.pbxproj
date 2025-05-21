@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		8694073C2DDDCB88004ECCA7 /* FirebaseFirestore in Frameworks */ = {isa = PBXBuildFile; productRef = 8694073B2DDDCB88004ECCA7 /* FirebaseFirestore */; };
 		869F3AA62DDB6C590017102A /* FirebaseAnalytics in Frameworks */ = {isa = PBXBuildFile; productRef = 869F3AA52DDB6C590017102A /* FirebaseAnalytics */; };
 		869F3AA92DDB792B0017102A /* FirebaseAuth in Frameworks */ = {isa = PBXBuildFile; productRef = 869F3AA82DDB792B0017102A /* FirebaseAuth */; };
 		869F3ABB2DDBC3290017102A /* GoogleSignIn in Frameworks */ = {isa = PBXBuildFile; productRef = 869F3ABA2DDBC3290017102A /* GoogleSignIn */; };
@@ -76,6 +77,7 @@
 				869F3AA62DDB6C590017102A /* FirebaseAnalytics in Frameworks */,
 				869F3AA92DDB792B0017102A /* FirebaseAuth in Frameworks */,
 				869F3ABB2DDBC3290017102A /* GoogleSignIn in Frameworks */,
+				8694073C2DDDCB88004ECCA7 /* FirebaseFirestore in Frameworks */,
 				869F3ABD2DDBC3290017102A /* GoogleSignInSwift in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -150,6 +152,7 @@
 				869F3AA82DDB792B0017102A /* FirebaseAuth */,
 				869F3ABA2DDBC3290017102A /* GoogleSignIn */,
 				869F3ABC2DDBC3290017102A /* GoogleSignInSwift */,
+				8694073B2DDDCB88004ECCA7 /* FirebaseFirestore */,
 			);
 			productName = Tafaron;
 			productReference = 8698739E2DDB4AB20075AE81 /* Tafaron.app */;
@@ -437,6 +440,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 4B44KQ5JJ4;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = Tafaron/Info.plist;
@@ -465,6 +469,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 4B44KQ5JJ4;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = Tafaron/Info.plist;
@@ -615,6 +620,11 @@
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
+		8694073B2DDDCB88004ECCA7 /* FirebaseFirestore */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 869F3AA42DDB6C590017102A /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseFirestore;
+		};
 		869F3AA52DDB6C590017102A /* FirebaseAnalytics */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = 869F3AA42DDB6C590017102A /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;

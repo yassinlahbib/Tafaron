@@ -21,6 +21,12 @@ struct AuthDataResultModel {
     }
 }
 
+enum AuthProviderOption: String {
+    case email = "password"
+    case google = "google.com"
+    
+}
+
 final class AuthenticationManager {
     //Patron de Conception : Singleton
     
@@ -35,6 +41,40 @@ final class AuthenticationManager {
         return AuthDataResultModel(user: user)
     }
     
+    // google.com
+    // password
+    
+    func getProviders() throws -> [AuthProviderOption]{
+        guard let providerData = Auth.auth().currentUser?.providerData else {
+            throw URLError(.badServerResponse)
+        }
+        var providers: [AuthProviderOption] = []
+        for provider in providerData {
+            if let option = AuthProviderOption(rawValue: provider.providerID) {
+                providers.append(option)
+            } else {
+                assertionFailure("Provider option not found: \(provider.providerID)")
+            }
+        }
+        return providers
+    }
+    
+    //Déconnexion
+    func signOut() throws { //Se deconnecte localement donc pas besoin de async
+        try Auth.auth().signOut()
+    }
+    
+    func delete() async throws {
+        guard let user = Auth.auth().currentUser else {
+            throw URLError(.badURL)
+        }
+        try await user.delete()
+    }
+    
+}
+
+//MARK: SIGN IN EMAIL
+extension AuthenticationManager {
     //Création utilisateur
     @discardableResult //la fonction retourne une valeur que l'on utilise pas tout le temps
     func createUser(email: String, password: String) async throws -> AuthDataResultModel { //async (va essayer d'atteindre le serveur Firebase)
@@ -53,10 +93,20 @@ final class AuthenticationManager {
     func resetPassword(email: String) async throws {
         try await Auth.auth().sendPasswordReset(withEmail: email)
     }
+}
+
+
+//MARK: SIGN IN SSO
+extension AuthenticationManager {
     
-    //Déconnexion
-    func signOut() throws { //Se deconnecte localement donc pas besoin de async
-        try Auth.auth().signOut()
+    @discardableResult
+    func signInWithGoogle(tokens: GoogleSignInResultModel) async throws -> AuthDataResultModel {
+        let credential = GoogleAuthProvider.credential(withIDToken: tokens.idToken, accessToken: tokens.accessToken)
+        return try await signIn(credential: credential)
     }
     
+    func signIn(credential: AuthCredential) async throws -> AuthDataResultModel {
+        let authDataResult = try await Auth.auth().signIn(with: credential)
+        return AuthDataResultModel(user: authDataResult.user)
+    }
 }

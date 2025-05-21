@@ -10,24 +10,7 @@ import GoogleSignIn
 import GoogleSignInSwift
 
 
-/*
-struct GoogleSignInResultModel {
-    let idToken: String
-    let accessToken: String
-}
-*/
 
-@MainActor
-final class AuthenticationViewModel : ObservableObject {
-    
-    func signInGoogle() async throws {
-        print("In signInGoogle")
-        let helper = SignInGoogleHelper()
-        let tokens = try await helper.signIn()
-        try await AuthenticationManager.shared.signInWithGoogle(tokens: tokens)
-    }
-    
-}
 
 struct AuthenticationView: View {
     
