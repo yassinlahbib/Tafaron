@@ -7,22 +7,7 @@
 
 import SwiftUI
 
-@MainActor
-final class SettingsViewModel : ObservableObject {
-    
-    func signOut() throws {
-        try AuthenticationManager.shared.signOut()
-    }
-    func resetPassword() async throws {
-        let authUser = try  AuthenticationManager.shared.getAuthenticatedUser()
-        
-        guard let email = authUser.email else {
-            throw URLError(.fileDoesNotExist)
-        }
-        
-        try await AuthenticationManager.shared.resetPassword(email: email)
-    }
-}
+
 
 struct SettingsView: View {
     
@@ -42,7 +27,25 @@ struct SettingsView: View {
                 }
                 
             }
-            emailSection
+            Button(role: .destructive){
+                Task {
+                    do {
+                        try await viewModel.deleteAccount()
+                        showSignInView = true
+                    } catch {
+                        print(error)
+                    }
+                }
+            } label: {
+                Text("Supprimer le compte")
+            }
+            
+            if viewModel.authProviders.contains(.email) {
+                emailSection
+            }
+        }
+        .onAppear() {
+            viewModel.loadAuthProviders()
         }
         .navigationBarTitle("Réglages")
     }
