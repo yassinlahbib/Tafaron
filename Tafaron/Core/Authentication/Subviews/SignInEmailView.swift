@@ -11,8 +11,10 @@ import SwiftUI
 
 struct SignInEmailView: View {
     
-    @StateObject private var viewModel = SignInEmailViewModel()
-    @Binding var showSignInView: Bool
+    @StateObject private var viewModel = SignInEmailViewModel() //Contient logique d'authentification
+    @Binding var showSignInView: Bool //SAvoir si le user est connecté
+    
+    var onSignIn: ((AuthDataResultModel) -> Void)? //Quand un user se connecte ou s'inscrit on execute cette fonction en lui passant l'objet AuthDataResult -> Permet a la vue parent (AuthenticationView) de savoir qui vient de se connecter
     
     var body: some View {
         VStack{
@@ -25,22 +27,32 @@ struct SignInEmailView: View {
                 .background(Color.gray.opacity(0.4))
                 .cornerRadius(10)
             
-            Button {
+            Button { //Bouton Connexion/Inscription
                 Task {
                     do {
-                        try await viewModel.signUp()
-                        showSignInView = false
-                        return
+                        let authDataResult = try await viewModel.signUp() //Essaye de creer un nouveaux compte
+                        onSignIn?(authDataResult) //Passe le user connecté a onSignIn
+                        //showSignInView = false
+                        //return
                     }catch{
-                        print(error)
+                        print("Erreur signUp : ", error)
+                        do {
+                            let authDataResult = try await viewModel.signIn() //Si inscription echoue alors connexion
+                            onSignIn?(authDataResult) //Passe le user connecté a onSignIn
+                            //showSignInView = false
+                            //return
+                        } catch {
+                            print("Erreur login : ", error)
+                        }
+                        
                     }
-                    do {
+                    /*do {
                         try await viewModel.signIn()
                         showSignInView = false
                         return
                     }catch{
                         print(error)
-                    }
+                    }*/
                 }
                 
             } label: {

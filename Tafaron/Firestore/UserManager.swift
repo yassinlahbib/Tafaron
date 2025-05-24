@@ -8,69 +8,224 @@
 import Foundation
 import FirebaseFirestore
 
+struct Movie : Codable{
+    let id: String
+    let title: String
+    let isPopular: Bool
+}
+
 struct DBUser: Codable {
+    
+    //Propriété de l'utilisateur
     let userId: String
     let email: String?
-    let photUrl: String?
+    let photoUrl: String?
     let dateCreated: Date?
+    let isPremium: Bool?
+    let preferences: [String]?
+    let favoriteMovie: Movie?
+    let pseudo: String?
+    let amis: [String]? //Liste des amis du user
+
+    
+    
+    //Constructeur à partir de l'authentification -> Création d'un DBUser au moment de l'inscription
+    init(auth: AuthDataResultModel) {
+        self.userId = auth.uid
+        self.email = auth.email
+        self.photoUrl = auth.photoUrl
+        self.dateCreated = Date()
+        self.isPremium = false
+        self.preferences = nil
+        self.favoriteMovie = nil
+        self.pseudo = nil
+        self.amis = nil
+    }
+    
+    //Constructeur pour ajouter le pseudo au DBUser
+    init(auth: AuthDataResultModel, pseudo: String) {
+        self.userId = auth.uid
+        self.email = auth.email
+        self.photoUrl = auth.photoUrl
+        self.dateCreated = Date()
+        self.isPremium = false
+        self.preferences = nil
+        self.favoriteMovie = nil
+        self.pseudo = pseudo
+        self.amis = nil
+    }
+
+     
+    //Constructeur manuel
+    init (
+    userId: String,
+    email: String? = nil,
+    photoUrl: String? = nil,
+    dateCreated: Date? = nil,
+    isPremium: Bool? = nil,
+    preferences: [String]? = nil,
+    favoriteMovie: Movie? = nil,
+    pseudo: String? = nil,
+    amis: [String]? = nil
+    ) {
+        self.userId = userId
+        self.email = email
+        self.photoUrl = photoUrl
+        self.dateCreated = dateCreated
+        self.isPremium = isPremium
+        self.preferences = preferences
+        self.favoriteMovie = favoriteMovie
+        self.pseudo = pseudo
+        self.amis = amis
+    }
+    
+    //Définition des noms exacts des champs Firestore
+    enum CodingKeys: String, CodingKey {
+        case userId = "user_id"
+        case email = "email"
+        case photoUrl = "photo_url"
+        case dateCreated = "date_created"
+        case isPremium = "user_isPremium"
+        case preferences = "preferences"
+        case favoriteMovie = "favorite_movie"
+        case pseudo = "pseudo"
+        case amis = "amis"
+
+    }
+    
+    //Recrée un DBUser à partir d’un document Firestore. (Généré par XCODE)
+    init(from decoder: any Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        self.userId = try container.decode(String.self, forKey: .userId)
+        self.email = try container.decodeIfPresent(String.self, forKey: .email)
+        self.photoUrl = try container.decodeIfPresent(String.self, forKey: .photoUrl)
+        self.dateCreated = try container.decodeIfPresent(Date.self, forKey: .dateCreated)
+        self.isPremium = try container.decodeIfPresent(Bool.self, forKey: .isPremium)
+        self.preferences = try container.decodeIfPresent([String].self, forKey: .preferences)
+        self.favoriteMovie = try container.decodeIfPresent(Movie.self, forKey: .favoriteMovie)
+        self.pseudo = try container.decodeIfPresent(String.self, forKey: .pseudo)
+        self.amis = try container.decodeIfPresent([String].self, forKey: .amis)
+    }
+    
+    //Transforme un DBUser en dictionnaire Firestore, prêt à être enregistré. (Généré par XCODE)
+    func encode(to encoder: any Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(self.userId, forKey: .userId)
+        try container.encodeIfPresent(self.email, forKey: .email)
+        try container.encodeIfPresent(self.photoUrl, forKey: .photoUrl)
+        try container.encodeIfPresent(self.dateCreated, forKey: .dateCreated)
+        try container.encodeIfPresent(self.isPremium, forKey: .isPremium)
+        try container.encodeIfPresent(self.preferences, forKey: .preferences)
+        try container.encodeIfPresent(self.favoriteMovie, forKey: .favoriteMovie)
+        try container.encodeIfPresent(self.pseudo, forKey: .pseudo)
+        try container.encodeIfPresent(self.amis, forKey: .amis)
+    }
 }
 
 
 final class UserManager {
     
+    //Classe Singleton (shared) qui centralise tous les accès à la collection "users".
     static let shared = UserManager()
     private init () { }
     
     private let userCollection = Firestore.firestore().collection("users")
     
+    //Récupérer une référence vers un document utilisateur
     private func userDocument(userId: String) -> DocumentReference {
         userCollection.document(userId)
     }
     
+    
+    func createNewUser(user: DBUser) async throws {
+        try userDocument(userId: user.userId).setData(from: user, merge: false)
+    }
+    
+    
+    
+    
+    
     private let encoder: Firestore.Encoder = {
         let encoder = Firestore.Encoder()
-        encoder.keyEncodingStrategy = .convertToSnakeCase
         return encoder
     }()
     
     private let decoder: Firestore.Decoder = {
         let decoder = Firestore.Decoder()
-        decoder.keyDecodingStrategy = .convertFromSnakeCase
         return decoder
     }()
     
-    func createNewUser(user: DBUser) async throws {
-        try userDocument(userId: user.userId).setData(from: user, merge: false, encoder: encoder)
-    }
     
-    //Ancienne version: avant l'utilisation de Codable pour DBUser
-    /*func createNewUser(auth: AuthDataResultModel) async throws {
-        var userData: [String:Any] = [
-            "user_id" : auth.uid,
-            "dat_created" : Timestamp(),
-        ]
-        if let photoUrl = auth.photoUrl {
-            userData["photo_url"] = photoUrl
-        }
-        
-        try await userDocument(userId: auth.uid).setData(userData, merge: false)
-    }*/
+    
+    
+    
     
     func getUser(userId: String) async throws -> DBUser {
-        try await userDocument(userId: userId).getDocument(as: DBUser.self, decoder: decoder)
+        try await userDocument(userId: userId).getDocument(as: DBUser.self)
     }
     
-    /*func getUser(userId: String) async throws -> DBUser {
-        let snapshot = try await userDocument(userId: userId).getDocument()
-        
-        guard let data = snapshot.data(), let userId = data["user_id"] as? String, let email = data["email"] as? String else {
-            throw URLError(.badServerResponse)
+
+    //Mettre à jour uniquement le champ isPremium
+    func updateUserPremium(userId: String, isPremium: Bool) async throws {
+        let data: [String:Any] = [
+            DBUser.CodingKeys.isPremium.rawValue : isPremium
+        ]
+        try await userDocument(userId: userId).updateData(data)
+    }
+    
+    
+    //Ajouter des préférences a l'utilisateur
+    func addUserPreference(userId: String, preference: String) async throws {
+        let data: [String:Any] = [
+            DBUser.CodingKeys.preferences.rawValue : FieldValue.arrayUnion([preference]) //Union de ce qu'il y a vait dans l'array et ce qu'on ajoute comme preference
+        ]
+        try await userDocument(userId: userId).updateData(data)
+    }
+    
+    //Supprimer des préférences a l'utilisateur
+    func removeUserPreference(userId: String, preference: String) async throws {
+        let data: [String:Any] = [
+            DBUser.CodingKeys.preferences.rawValue : FieldValue.arrayRemove([preference]) //Union de ce qu'il y a vait dans l'array et ce qu'on ajoute comme preference
+        ]
+        try await userDocument(userId: userId).updateData(data)
+    }
+    
+    
+    
+    
+    //Ajouter un film favori a l'utilisateur
+    func addFavoriteMovie(userId: String, movie: Movie) async throws {
+        guard let data = try? encoder.encode(movie) else {
+            throw URLError(.badURL)
         }
         
-        let photUrl = data["photo_url"] as? String
-        let dateCreated = data["date_created"] as? Date
-        
-        return DBUser(userId: userId, email: email, photUrl: photUrl, dateCreated: dateCreated)
-    }*/
+        let dict: [String:Any] = [
+            DBUser.CodingKeys.favoriteMovie.rawValue : data
+        ]
+        try await userDocument(userId: userId).updateData(dict)
+    }
     
+    
+    
+    //Supprimer un film favori a l'utilisateur
+    func removeFavoriteMovie(userId: String) async throws {
+        let data: [String:Any?] = [
+            DBUser.CodingKeys.favoriteMovie.rawValue : nil 
+        ]
+        try await userDocument(userId: userId).updateData(data as [AnyHashable : Any])
+    }
+    
+    
+    //Return true si le pseudo est disponible
+    func isPseudoDisponible(_ pseudo: String) async throws -> Bool {
+        let snapshot = try await Firestore.firestore()
+            .collection("users")
+            .whereField("pseudo", isEqualTo: pseudo)
+            .getDocuments()
+
+        return snapshot.documents.isEmpty
+    }
+
 }
+
+

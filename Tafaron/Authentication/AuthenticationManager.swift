@@ -14,6 +14,14 @@ struct AuthDataResultModel {
     let email: String?
     let photoUrl: String?
     
+    
+    // Constructeur publique pour previsualisation
+    init(uid: String, email: String?, photoUrl: String?) {
+        self.uid = uid
+        self.email = email
+        self.photoUrl = photoUrl
+    }
+    
     init(user: User){
         self.uid = user.uid
         self.email = user.email

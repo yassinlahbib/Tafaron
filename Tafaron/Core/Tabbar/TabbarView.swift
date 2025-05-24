@@ -8,11 +8,29 @@
 import SwiftUI
 
 struct TabbarView: View {
+    
+    @Binding var showSignInView: Bool
+    
     var body: some View {
-        Text(/*@START_MENU_TOKEN@*/"Hello, World!"/*@END_MENU_TOKEN@*/)
+        TabView {
+            NavigationStack {
+                GameView()
+            }
+            .tabItem{
+                Image(systemName: "gamecontroller")
+                Text("Jeux")
+            }
+            NavigationStack {
+                ProfileView(showSignInView: $showSignInView)
+            }
+            .tabItem{
+                Image(systemName: "person")
+                Text("Profile")
+            }
+        }
     }
 }
 
 #Preview {
-    TabbarView()
+    TabbarView(showSignInView: .constant(false))
 }

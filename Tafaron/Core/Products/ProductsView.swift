@@ -7,6 +7,10 @@
 
 import SwiftUI
 
+@MainActor
+
+
+
 struct ProductsView: View {
     var body: some View {
         Text(/*@START_MENU_TOKEN@*/"Hello, World!"/*@END_MENU_TOKEN@*/)
@@ -14,5 +18,7 @@ struct ProductsView: View {
 }
 
 #Preview {
-    ProductsView()
+    NavigationStack{
+        ProductsView()
+    }
 }
