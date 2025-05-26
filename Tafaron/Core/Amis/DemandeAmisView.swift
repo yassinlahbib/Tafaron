@@ -1,36 +1,24 @@
-//
-//  DemandeAmisView.swift
-//  Tafaron
-//
-//  Created by Yassin Lahbib on 24/05/2025.
-//
-
 import Foundation
 import FirebaseFirestore
 import SwiftUI
 
 @MainActor
 final class DemandeAmisViewModel: ObservableObject {
-    
     @Published var demandesRecues: [FriendRequest] = []
     @Published var messageErreur: String?
     @Published private(set) var user: DBUser? = nil
     
     private var listener: ListenerRegistration?
     
-    
     func envoyerDemande(from: String, to: String) async {
         do {
-            // On récupere le DBUser du destinataire
             guard let destinataire = try? await UserManager.shared.getUserByPseudo(userPseudo: to) else {
                 messageErreur = "Aucun utilisateur avec ce pseudo."
-                print("Aucun user find !")
                 return
             }
 
             if destinataire.pseudo == from {
                 messageErreur = "Tu ne peux pas t’ajouter toi-même."
-                print("demande a lui meme pas possible")
                 return
             }
 
@@ -38,19 +26,13 @@ final class DemandeAmisViewModel: ObservableObject {
                 from: from,
                 to: destinataire.pseudo!
             )
-            print(from, "a resussi a envoyer a", to)
             messageErreur = "Demande envoyée à \(to) !"
 
         } catch {
             messageErreur = "Erreur: \(error.localizedDescription)"
         }
     }
-    
 
-
-    
-    
-    // Commencer à écouter les demandes en attente
     func commencerEcouteDesDemandes(pseudoId: String) {
         listener = FriendRequestManager.shared.listenForPendingRequests(for: pseudoId) { [weak self] demandes in
             Task { @MainActor in
@@ -59,7 +41,6 @@ final class DemandeAmisViewModel: ObservableObject {
         }
     }
     
-    // Stopper le listener
     func arreterEcoute() {
         listener?.remove()
         listener = nil
@@ -85,27 +66,22 @@ final class DemandeAmisViewModel: ObservableObject {
             messageErreur = "Erreur lors du refus : \(error.localizedDescription)"
         }
     }
-
-    
-    
 }
-
 
 struct DemandeAmisView: View {
     @StateObject private var viewModel = DemandeAmisViewModel()
     @State private var pseudoRecherche = ""
+    @State private var messageAction: String? = nil
     var demandeListener: DemandeAmisListener
-    //@State private var currentUserId: String? = nil
 
     var body: some View {
-        VStack {
+        VStack(spacing: 12) {
             TextField("Pseudo à ajouter", text: $pseudoRecherche)
                 .textFieldStyle(.roundedBorder)
 
             Button("Envoyer demande") {
                 Task {
                     if let userPseudo = viewModel.user?.pseudo {
-                        print(userPseudo, "envoie demande a :", pseudoRecherche)
                         await viewModel.envoyerDemande(from: userPseudo, to: pseudoRecherche)
                     }
                 }
@@ -115,45 +91,79 @@ struct DemandeAmisView: View {
                 Text(message)
                     .foregroundColor(.red)
             }
-            
 
-        
-            List {
-                ForEach(viewModel.demandesRecues, id: \.friendRequestId) { demande in
-                    HStack {
-                        Text(demande.from)
-                            .font(.headline)
-
-                        Spacer()
-
-                        Button {
-                            Task {
-                                await viewModel.refuserDemande(demande: demande)
-                                print("")
-                            }
-                        } label: {
-                            Image(systemName: "xmark")
-                                .foregroundColor(.red)
-                                .padding(8)
-                                .background(Circle().stroke(Color.red, lineWidth: 1.5))
-                        }
-                        Spacer()
-                        Button {
-                            Task {
-                                await viewModel.accepterDemande(demande: demande)
-                            }
-                        } label: {
-                            Image(systemName: "plus")
-                                .foregroundColor(.green)
-                                .padding(8)
-                                .background(Circle().stroke(Color.green, lineWidth: 1.5))
-                        }
-                    }
-                    .padding(.vertical, 4)
-                }
+            if let actionMessage = messageAction {
+                Text(actionMessage)
+                    .foregroundColor(.green)
+                    .font(.subheadline)
+                    .transition(.opacity)
             }
 
-            
+            ScrollView {
+                LazyVStack(spacing: 12) {
+                    ForEach(viewModel.demandesRecues, id: \.friendRequestId) { demande in
+                        HStack {
+                            Text(demande.from)
+                                .font(.headline)
+
+                            Spacer()
+
+                            Button {
+                                Task {
+                                    await viewModel.refuserDemande(demande: demande)
+                                    await MainActor.run {
+                                        withAnimation {
+                                            viewModel.demandesRecues.removeAll { $0.friendRequestId == demande.friendRequestId }
+                                            messageAction = "❌ Demande refusée de \(demande.from)"
+                                        }
+                                    }
+                                    try? await Task.sleep(nanoseconds: 2_000_000_000)
+                                    await MainActor.run {
+                                        withAnimation {
+                                            messageAction = nil
+                                        }
+                                    }
+                                }
+                            } label: {
+                                Image(systemName: "xmark")
+                                    .foregroundColor(.red)
+                                    .padding(8)
+                                    .background(Circle().stroke(Color.red, lineWidth: 1.5))
+                            }
+
+                            Button {
+                                Task {
+                                    await viewModel.accepterDemande(demande: demande)
+                                    await MainActor.run {
+                                        withAnimation {
+                                            viewModel.demandesRecues.removeAll { $0.friendRequestId == demande.friendRequestId }
+                                            messageAction = "✅ Demande acceptée de \(demande.from)"
+                                        }
+                                    }
+                                    try? await Task.sleep(nanoseconds: 2_000_000_000)
+                                    await MainActor.run {
+                                        withAnimation {
+                                            messageAction = nil
+                                        }
+                                    }
+                                }
+                            } label: {
+                                Image(systemName: "plus")
+                                    .foregroundColor(.green)
+                                    .padding(8)
+                                    .background(Circle().stroke(Color.green, lineWidth: 1.5))
+                            }
+                        }
+                        .padding(.horizontal)
+                        .padding(.vertical, 8)
+                        .background(Color(.systemBackground))
+                        .cornerRadius(12)
+                        .shadow(color: .black.opacity(0.05), radius: 2, x: 0, y: 1)
+                        .transition(.move(edge: .trailing).combined(with: .opacity))
+                    }
+                }
+                .padding(.top)
+            }
         }
         .padding()
         .onAppear {
@@ -161,7 +171,6 @@ struct DemandeAmisView: View {
                 try? await viewModel.loadUser()
                 if let userPseudo = viewModel.user?.pseudo {
                     viewModel.commencerEcouteDesDemandes(pseudoId: userPseudo)
-                    print("pseudo connecté est celui de :", userPseudo)
                 } else {
                     viewModel.messageErreur = "Impossible de récupérer l'identifiant utilisateur."
                 }
@@ -173,9 +182,6 @@ struct DemandeAmisView: View {
     }
 }
 
-
-
 #Preview {
     DemandeAmisView(demandeListener: DemandeAmisListener())
 }
-

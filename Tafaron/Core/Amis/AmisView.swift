@@ -90,7 +90,6 @@ struct AmisView: View {
     @StateObject private var demandeListener = DemandeAmisListener()
     @State private var currentUser: String? = nil
     
-    
     var body: some View {
         
         Text("Tu as \(demandeListener.nombreDemandes) demandes en attente")
