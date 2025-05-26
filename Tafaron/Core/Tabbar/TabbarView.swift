@@ -21,6 +21,13 @@ struct TabbarView: View {
                 Text("Jeux")
             }
             NavigationStack {
+                AmisView()
+            }
+            .tabItem{
+                Image(systemName: "person.3")
+                Text("Amis")
+            }
+            NavigationStack {
                 ProfileView(showSignInView: $showSignInView)
             }
             .tabItem{
@@ -30,7 +37,6 @@ struct TabbarView: View {
         }
     }
 }
-
 #Preview {
     TabbarView(showSignInView: .constant(false))
 }

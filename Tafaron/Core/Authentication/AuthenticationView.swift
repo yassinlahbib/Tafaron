@@ -26,7 +26,7 @@ struct AuthenticationView: View {
     var body: some View {
         VStack {
             if needsPseudo, let user = authUser { //Si user inscrit mais pas encore de DBUser
-                PseudoInputView(user: user, showSignInView: $showSignInView) //On affiche la demande de pseudo
+                PseudoInputView(user: user, showSignInView: $showSignInView) //On affiche la demande de pseudo qui créera le DBUser
             } else {
                 Button {
                     showEmailSheet = true

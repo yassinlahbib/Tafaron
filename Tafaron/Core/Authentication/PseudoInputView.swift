@@ -8,11 +8,12 @@
 import SwiftUI
 
 struct PseudoInputView: View {
-    let user: AuthDataResultModel
-    @Binding var showSignInView: Bool
+    
+    let user: AuthDataResultModel // L'utilisateur qui vient de s'inscrire (mais qui n’a pas encore de pseudo enregistré dans Firestore)
+    @Binding var showSignInView: Bool //  Ce Binding permet de fermer l'écran de connexion une fois le pseudo validé
     
     @State private var pseudo: String = ""
-    @State private var message: String?
+    @State private var message: String? // Message d’erreur affiché si le pseudo est déjà pris ou en cas d’erreur technique
     
     var body: some View {
         VStack (spacing: 16) {
@@ -24,15 +25,16 @@ struct PseudoInputView: View {
             Button ("Valider"){
                 Task{
                     do{
-                        let disponible = try await UserManager.shared.isPseudoDisponible(pseudo)
+                        let disponible = try await UserManager.shared.isPseudoDisponible(pseudo) // Vérifie si ce pseudo est déjà utilisé dans Firestore
                         if !disponible {
                             message = "Ce pseudo est deja pris !"
                             return
                         }
                         
-                        let dbUser = DBUser(auth: user, pseudo: pseudo)
-                        try await UserManager.shared.createNewUser(user: dbUser)
-                        showSignInView = false
+                        // Pseudo disponible
+                        let dbUser = DBUser(auth: user, pseudo: pseudo) //On créér un DBUser avec le pseudo et les info du user
+                        try await UserManager.shared.createNewUser(user: dbUser) //On l'enregistre dans Firestore
+                        showSignInView = false // On ferme la vue de connexion
                     } catch {
                         message = "Erreur: \(error.localizedDescription)"
                     }

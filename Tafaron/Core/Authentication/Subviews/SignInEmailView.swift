@@ -32,27 +32,19 @@ struct SignInEmailView: View {
                     do {
                         let authDataResult = try await viewModel.signUp() //Essaye de creer un nouveaux compte
                         onSignIn?(authDataResult) //Passe le user connecté a onSignIn
-                        //showSignInView = false
-                        //return
+
                     }catch{
                         print("Erreur signUp : ", error)
                         do {
                             let authDataResult = try await viewModel.signIn() //Si inscription echoue alors connexion
                             onSignIn?(authDataResult) //Passe le user connecté a onSignIn
-                            //showSignInView = false
-                            //return
+
                         } catch {
                             print("Erreur login : ", error)
                         }
                         
                     }
-                    /*do {
-                        try await viewModel.signIn()
-                        showSignInView = false
-                        return
-                    }catch{
-                        print(error)
-                    }*/
+
                 }
                 
             } label: {
